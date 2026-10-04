@@ -1,0 +1,24 @@
+{
+  "name": "devtinder",
+  "version": "1.0.0",
+  "description": "Dev Tinder for developers",
+  "keywords": [
+    "Node.js",
+    "JavaScript",
+    "MongoDB",
+    "Express.js"
+  ],
+  "license": "ISC",
+  "author": "Giri Babu",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "mongoose": "^9.10.4",
+    "nodemon": "^3.1.14"
+  }
+}
