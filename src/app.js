@@ -69,10 +69,24 @@ app.delete("/user", async (req, res) => {
     }
 })
 
-app.patch("/user", async (req, res) => {
+app.patch("/user/:userId", async (req, res) => {
+    const userId = req?.params?.userId;
+    const data = req.body;
+
     try {
-        const userId = req.body.userId;
-        const data = req.body;
+        const ALLOWED_UPDATES = [
+            "age", "gender", "photoUrl", "about", "skills"
+        ];
+
+        const isUpdateAllowed = Object.keys(data).every(k =>
+            ALLOWED_UPDATES.includes(k)
+        );
+        if (!isUpdateAllowed) {
+            throw new Error("Update not allowed");
+        }
+        if (data?.skills.length > 10) {
+            throw new Error("Skills can't exceed 10");
+        }
 
         const user = await User.findByIdAndUpdate({ _id: userId }, data,
             {
@@ -80,13 +94,12 @@ app.patch("/user", async (req, res) => {
                 runValidators: true
             }
         );
-        console.log(user);
 
         res.status(200).send("User updated successfully!");
     }
     catch (error) {
         console.error(error.message);
-        res.status(500).send("Internal server error");
+        res.status(500).send("Internal server error: " + error.message);
     }
 })
 

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
+const validator = require("validator");
 
 const userSchema = new Schema({
     firstName: {
@@ -20,12 +21,22 @@ const userSchema = new Schema({
         unique: true,
         lowercase: true,
         trim: true,
-        maxLength: [40, "Email cannot exceed 40 characters"]
+        maxLength: [40, "Email cannot exceed 40 characters"],
+        validate(value) {
+            if (!validator.isEmail(value)) {
+                throw new Error("Invalid email")
+            }
+        }
     },
     password: {
         type: String,
         required: [true, "Password is required"],
-        minLength: [8, "Password must be at least 8 characters"]
+        minLength: [8, "Password must be at least 8 characters"],
+        validate(value) {
+            if (!validator.isStrongPassword(value)) {
+                throw new Error("Enter a strong password")
+            }
+        }
     },
     age: {
         type: Number,
@@ -44,7 +55,12 @@ const userSchema = new Schema({
     photoUrl: {
         type: String,
         default: "https://png.pngtree.com/png-vector/20190710/ourmid/pngtree-user-vector-avatar-png-image_1541962.jpg",
-        trim: true
+        trim: true,
+        validate(value) {
+            if (!validator.isURL(value)) {
+                throw new Error("Invalid photo url")
+            }
+        }
     },
     about: {
         type: String,
@@ -54,7 +70,13 @@ const userSchema = new Schema({
     },
     skills: {
         type: [String],
-        default: []
+        default: [],
+        validate: {
+            validator: function (skills) {
+                return skills.length <= 10
+            },
+            message: "You can add a maximum of 10 skills"
+        }
     }
 },
     {
