@@ -1,6 +1,9 @@
-const express = require("express");
-const { connectDB } = require("./config/database");
-const { User } = require("./models/user");
+const express = require('express');
+const bcrypt = require('bcrypt');
+
+const { connectDB } = require('./config/database');
+const { User } = require('./models/user');
+const { validateSignUpData, validateLoginData } = require('./utils/validation');
 
 // Instance of server
 const app = express();
@@ -10,14 +13,53 @@ app.use(express.json());
 
 app.post("/signup", async (req, res) => {
     try {
-        const userData = req.body;
+        // Validate data
+        validateSignUpData(req.body);
 
-        const newUser = new User(userData);
+        const { firstName, lastName, emailId, password } = req.body;
+
+        // Encrypt password
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        // Creating a new instance of the User model
+        const newUser = new User({
+            firstName,
+            lastName,
+            emailId,
+            password: passwordHash
+        });
         await newUser.save();
 
         res.status(201).send("User added successfully!");
-    } catch (err) {
-        res.status(500).send("Internal server error: " + err.message);
+    } 
+    catch (err) {
+        res.status(400).send("ERROR : " + err.message);
+    }
+})
+
+app.post("/login", async (req, res) => {
+    const { emailId, password } = req.body;
+
+    try {
+        // Validate data
+        validateLoginData(emailId);
+
+        // Find user by email
+        const user = await User.findOne({ emailId: emailId });
+        if (!user) {
+            res.status(404).send("Invalid credentials");
+        }
+
+        // Compare passwords
+        const isPasswordValid = await bcrypt.compare(password, user?.password);
+        if (!isPasswordValid) {
+            res.status(400).send("Invalid credentials");
+        }
+
+        res.status(200).send("Login successful!");
+    }
+    catch (err) {
+        res.status(400).send("ERROR : " + err.message);
     }
 })
 
