@@ -1,5 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 
 const { connectDB } = require('./config/database');
 const { User } = require('./models/user');
@@ -8,8 +10,13 @@ const { validateSignUpData, validateLoginData } = require('./utils/validation');
 // Instance of server
 const app = express();
 
-// Middleware
+/* Middlewares */
+// Convert JSON to JavaScript Object in req object
 app.use(express.json());
+
+// Read the Cookies data
+app.use(cookieParser());
+
 
 app.post("/signup", async (req, res) => {
     try {
@@ -31,7 +38,7 @@ app.post("/signup", async (req, res) => {
         await newUser.save();
 
         res.status(201).send("User added successfully!");
-    } 
+    }
     catch (err) {
         res.status(400).send("ERROR : " + err.message);
     }
@@ -56,10 +63,37 @@ app.post("/login", async (req, res) => {
             res.status(400).send("Invalid credentials");
         }
 
+        // Create JWT Token
+        const token = await jwt.sign({ _id: user?._id }, "DEVTINDER@123");
+
+        // Store token in cookies
+        res.cookie("token", token);
         res.status(200).send("Login successful!");
     }
     catch (err) {
         res.status(400).send("ERROR : " + err.message);
+    }
+})
+
+app.get("/profile", async (req, res) => {
+    try {
+        const { token } = req.cookies;
+
+        if (!token) {
+            throw new Error("Invalid token");
+        }
+
+        const decodedToken = await jwt.verify(token, "DEVTINDER@123");
+        const { _id } = decodedToken;
+
+        const user = await User.findById(_id);
+        if(!user){
+            throw new Error("User not found!");
+        }
+        
+        res.status(200).send(user);
+    } catch (error) {
+        res.status(400).send("ERR : " + error.message)
     }
 })
 
