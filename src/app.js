@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { connectDB } = require('./config/database');
 const { User } = require('./models/user');
 const { validateSignUpData, validateLoginData } = require('./utils/validation');
+const { userAuth } = require('./middlewares/auth');
 
 // Instance of server
 const app = express();
@@ -75,22 +76,10 @@ app.post("/login", async (req, res) => {
     }
 })
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
     try {
-        const { token } = req.cookies;
+        const user = req.user;
 
-        if (!token) {
-            throw new Error("Invalid token");
-        }
-
-        const decodedToken = await jwt.verify(token, "DEVTINDER@123");
-        const { _id } = decodedToken;
-
-        const user = await User.findById(_id);
-        if(!user){
-            throw new Error("User not found!");
-        }
-        
         res.status(200).send(user);
     } catch (error) {
         res.status(400).send("ERR : " + error.message)
