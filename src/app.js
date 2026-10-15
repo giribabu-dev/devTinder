@@ -1,7 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
-const jwt = require('jsonwebtoken');
 
 const { connectDB } = require('./config/database');
 const { User } = require('./models/user');
@@ -59,16 +58,17 @@ app.post("/login", async (req, res) => {
         }
 
         // Compare passwords
-        const isPasswordValid = await bcrypt.compare(password, user?.password);
+        // const isPasswordValid = await bcrypt.compare(password, user?.password);
+        const isPasswordValid = await user.validatePassword(password);
         if (!isPasswordValid) {
             res.status(400).send("Invalid credentials");
         }
 
         // Create JWT Token
-        const token = await jwt.sign({ _id: user?._id }, "DEVTINDER@123");
+        const token = await user.getJWT();
 
         // Store token in cookies
-        res.cookie("token", token);
+        res.cookie("token", token, { httpOnly: true, expires: new Date(Date.now() + 7 * 3600000) });
         res.status(200).send("Login successful!");
     }
     catch (err) {
