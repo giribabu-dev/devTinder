@@ -1,6 +1,6 @@
 const express = require('express');
 const { userAuth } = require('../middlewares/auth');
-const User = require('../models/user');
+const { validateEditProfileData } = require('../utils/validation');
 
 const profileRouter = express.Router();
 
@@ -9,39 +9,27 @@ profileRouter.get("/view", userAuth, async (req, res) => {
         const user = req.user;
 
         res.status(200).send(user);
-    } 
+    }
     catch (error) {
         res.status(400).send("ERR : " + error.message)
     }
 })
 
-profileRouter.patch("/edit/:userId", async (req, res) => {
-    const userId = req?.params?.userId;
-    const data = req.body;
-
+profileRouter.patch("/edit", userAuth, async (req, res) => {
     try {
-        const ALLOWED_UPDATES = [
-            "age", "gender", "photoUrl", "about", "skills"
-        ];
-
-        const isUpdateAllowed = Object.keys(data).every(k =>
-            ALLOWED_UPDATES.includes(k)
-        );
-        if (!isUpdateAllowed) {
-            throw new Error("Update not allowed");
-        }
-        if (data?.skills.length > 10) {
-            throw new Error("Skills can't exceed 10");
+        const isEditAllowed = validateEditProfileData(req?.body);
+        if (!isEditAllowed) {
+            throw new Error("Invalid edit request");
         }
 
-        const user = await User.findByIdAndUpdate({ _id: userId }, data,
-            {
-                returnDocument: "after",
-                runValidators: true
-            }
-        );
+        const userData = req.user;
+        Object.keys(req?.body).forEach(field => userData[field] = req.body[field]);
+        userData.save();
 
-        res.status(200).send("User updated successfully!");
+        res.status(200).json({
+            message: "Profile updated successfully",
+            data: userData
+        })
     }
     catch (error) {
         console.error(error.message);
