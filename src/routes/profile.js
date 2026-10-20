@@ -19,7 +19,9 @@ profileRouter.patch("/edit", userAuth, async (req, res) => {
     try {
         const isEditAllowed = validateEditProfileData(req?.body);
         if (!isEditAllowed) {
-            throw new Error("Invalid edit request");
+            return res.status(400).json({
+                message: "Invalid edit request"
+            })
         }
 
         const userData = req.user;
