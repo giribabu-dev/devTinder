@@ -28,3 +28,8 @@
 - Interested 
 - Accepted 
 - Rejected
+
+- $or and $and query
+- Why do we need index in Database?
+- What are the advantages and disadvantages of index
+- Compound Index

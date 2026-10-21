@@ -12,6 +12,7 @@ connectionRequestRouter.post("request/send/:status/:toUserId", userAuth, async (
         const toUserId = req.params.toUserId;
         const status = req.params.status;
 
+        // Validation for status
         const allowedStatus = ["interested", "ignored"];
         if (!allowedStatus.includes(status)) {
             return res.status(400).json({
@@ -19,6 +20,7 @@ connectionRequestRouter.post("request/send/:status/:toUserId", userAuth, async (
             })
         };
 
+        // Check if user is exists or not
         const isUserExists = await User.findById({ _id: toUserId });
         if (!isUserExists) {
             return res.status(404).json({
