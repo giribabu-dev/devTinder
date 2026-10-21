@@ -24,5 +24,17 @@ const connectionRequestSchema = new Schema({
     }
 );
 
+connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 });
+
+connectionRequestSchema.pre("save", function (next) {
+    const connectionRequest = this;
+
+    // Check if the fromUserId & toUserId are equal
+    if (connectionRequest.fromUserId.equals(connectionRequest.toUserId)) {
+        throw new Error("Cannot send request yourself");
+    }
+    next();
+})
+
 const ConnectionRequest = model("ConnectionRequest", connectionRequestSchema);
 module.exports = ConnectionRequest;
