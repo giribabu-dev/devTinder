@@ -20,8 +20,8 @@ app.use(cookieParser());
 
 // Routes
 app.use("/", authRouter);
-app.use("/profile", profileRouter);
-app.use("/request", connectionRequestRouter);
+app.use("/", profileRouter);
+app.use("/", connectionRequestRouter);
 
 app.get("/user", async (req, res) => {
     try {
