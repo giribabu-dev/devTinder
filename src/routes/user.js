@@ -4,6 +4,8 @@ const ConnectionRequest = require('../models/connectionRequest');
 
 const userRouter = express.Router();
 
+const userAttributes = ["firstName", "lastName", "photoUrl", "about"];
+
 // Get all the pending connection requests of logged-in user
 userRouter.get("/user/requests/pending", userAuth, async (req, res) => {
     try {
@@ -12,7 +14,8 @@ userRouter.get("/user/requests/pending", userAuth, async (req, res) => {
         const connectionRequests = await ConnectionRequest.find({
             toUserId: loggedInUser._id,
             status: "interested"
-        }).populate("fromUserId", ["firstName", "lastName", "photoUrl"]);
+        }).populate("fromUserId", userAttributes);
+
         if (connectionRequests.length == 0) {
             return res.status(200).json({
                 message: "No connection requests found",
@@ -29,6 +32,44 @@ userRouter.get("/user/requests/pending", userAuth, async (req, res) => {
         res.status(400).json({
             message: `ERROR : ${error.message}`
         });
+    }
+})
+
+userRouter.get("/user/connections", userAuth, async (req, res) => {
+    try {
+        const loggedInUser = req.user;
+
+        const connections = await ConnectionRequest.find({
+            $or: [
+                {
+                    fromUserId: loggedInUser._id,
+                    status: "accepted"
+                },
+                {
+                    toUserId: loggedInUser._id,
+                    status: "accepted"
+                }
+            ]
+        })
+            .populate("fromUserId", userAttributes)
+            .populate("toUserId", userAttributes);
+
+        const userData = connections.map(connection => {
+            if (connection.fromUserId._id.toString() === loggedInUser._id) {
+                return connection.toUserId;
+            }
+            return connection.fromUserId;
+        });
+
+        res.status(200).json({
+            message: "Connected fetched successfully",
+            data: userData
+        })
+    }
+    catch (error) {
+        res.status(400).json({
+            message: `ERROR : ${error.message}`
+        })
     }
 })
 
