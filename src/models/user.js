@@ -111,4 +111,4 @@ userSchema.methods.validatePassword = async function (userPassword) {
 }
 
 const User = model("User", userSchema);
-module.exports = { User };
+module.exports = User;
