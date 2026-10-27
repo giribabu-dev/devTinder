@@ -5,7 +5,7 @@ const User = require('../models/user');
 
 const userRouter = express.Router();
 
-const userAttributes = ["firstName", "lastName", "photoUrl", "about"];
+const USER_SAFE_DATA = ["firstName", "lastName", "photoUrl", "about", "skills"];
 
 // Get all the pending connection requests of logged-in user
 userRouter.get("/user/requests/pending", userAuth, async (req, res) => {
@@ -15,7 +15,7 @@ userRouter.get("/user/requests/pending", userAuth, async (req, res) => {
         const connectionRequests = await ConnectionRequest.find({
             toUserId: loggedInUser._id,
             status: "interested"
-        }).populate("fromUserId", userAttributes);
+        }).populate("fromUserId", USER_SAFE_DATA);
 
         if (connectionRequests.length == 0) {
             return res.status(200).json({
@@ -52,8 +52,8 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
                 }
             ]
         })
-            .populate("fromUserId", userAttributes)
-            .populate("toUserId", userAttributes);
+            .populate("fromUserId", USER_SAFE_DATA)
+            .populate("toUserId", USER_SAFE_DATA);
 
         const userData = connections.map(connection => {
             if (connection.fromUserId._id.toString() === loggedInUser._id) {
@@ -77,6 +77,10 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
 userRouter.get("/user/feed", userAuth, async (req, res) => {
     try {
         const loggedInUser = req.user;
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const calculateSkip = (page - 1) * limit;
 
         // Get users data except
         // 1. logged-in user
@@ -104,7 +108,15 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
                 { _id: { $nin: Array.from(hideUsersFromFeed) } },
                 { _id: { $ne: loggedInUser._id } }
             ]
-        });
+        })
+            .select(USER_SAFE_DATA)
+            .skip(calculateSkip)
+            .limit(limit);
+
+        res.status(200).json({
+            message: "Users fetched successfully",
+            data: users
+        })
     }
     catch (error) {
         res.status(400).json({
