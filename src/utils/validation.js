@@ -1,4 +1,4 @@
-const validator = require('validator');
+const validator = require("validator");
 
 const validateSignUpData = (data) => {
     const { firstName, lastName, emailId, password } = data;

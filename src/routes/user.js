@@ -1,7 +1,7 @@
-const express = require('express');
-const { userAuth } = require('../middlewares/auth');
-const ConnectionRequest = require('../models/connectionRequest');
-const User = require('../models/user');
+const express = require("express");
+const { userAuth } = require("../middlewares/auth");
+const ConnectionRequest = require("../models/connectionRequest");
+const User = require("../models/user");
 
 const userRouter = express.Router();
 
@@ -24,18 +24,19 @@ userRouter.get("/user/requests/pending", userAuth, async (req, res) => {
             })
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "Fetched connection requests",
             data: connectionRequests
         })
     }
     catch (error) {
-        res.status(400).json({
+        return res.status(400).json({
             message: `ERROR : ${error.message}`
         });
     }
 })
 
+// Get all user connections
 userRouter.get("/user/connections", userAuth, async (req, res) => {
     try {
         const loggedInUser = req.user;
@@ -62,18 +63,17 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
             return connection.fromUserId;
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "Connected fetched successfully",
             data: userData
         })
     }
     catch (error) {
-        res.status(400).json({
-            message: `ERROR : ${error.message}`
-        })
+        return res.status(400).json({ message: `ERROR : ${error.message}` })
     }
 })
 
+// User feed
 userRouter.get("/user/feed", userAuth, async (req, res) => {
     try {
         const loggedInUser = req.user;
@@ -93,7 +93,7 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
                 { fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }
             ]
         })
-            .select("fromUserId toUserId")
+            .select("fromUserId toUserId");
         // .populate("fromUserId", "firstName lastName")
         // .populate("toUserId", "firstName lastName")
 
@@ -113,13 +113,13 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
             .skip(calculateSkip)
             .limit(limit);
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "Users fetched successfully",
             data: users
-        })
+        });
     }
     catch (error) {
-        res.status(400).json({
+        return res.status(400).json({
             message: `ERROR : ${error.message}`
         });
     }

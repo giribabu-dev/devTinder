@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
-const { Schema, model } = mongoose;
 const validator = require("validator");
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+
+const { Schema, model } = mongoose;
 
 const userSchema = new Schema({
     firstName: {
