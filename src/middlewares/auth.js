@@ -1,13 +1,15 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
-const User = require('../models/user');
+const User = require("../models/user");
 
 const userAuth = async (req, res, next) => {
     try {
         // Read the token from cookies
         const { token } = req.cookies;
         if (!token) {
-            throw new Error("Invalid token");
+            return res.status(401).json({
+                message: "Invalid token"
+            });
         }
 
         // Verify the token
@@ -17,14 +19,18 @@ const userAuth = async (req, res, next) => {
         // Find the user by token
         const user = await User.findById({ _id: _id });
         if (!user) {
-            throw new Error("User not found");
+            return res.status(404).json({
+                message: "User not found"
+            });
         }
 
         req.user = user;
         next();
     } catch (error) {
-        console.log(error)
-        res.status(400).send("ERROR : " + error.message);
+        console.log(error);
+        return res.status(400).json({
+            message: `ERROR: ${error.message}`
+        });
     }
 };
 

@@ -1,11 +1,12 @@
-const express = require('express');
+const express = require("express");
 
-const { userAuth } = require('../middlewares/auth');
-const ConnectionRequest = require('../models/connectionRequest');
-const User = require('../models/user');
+const { userAuth } = require("../middlewares/auth");
+const ConnectionRequest = require("../models/connectionRequest");
+const User = require("../models/user");
 
 const connectionRequestRouter = express.Router();
 
+// Send connection request
 connectionRequestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
     try {
         const fromUserId = req.user._id;
@@ -17,15 +18,15 @@ connectionRequestRouter.post("/request/send/:status/:toUserId", userAuth, async 
         if (!allowedStatus.includes(status)) {
             return res.status(400).json({
                 message: "Invalid status"
-            })
-        };
+            });
+        }
 
         // Check if user is exists or not
         const isUserExists = await User.findById({ _id: toUserId });
         if (!isUserExists) {
             return res.status(404).json({
                 message: "User not found"
-            })
+            });
         }
 
         const isRequestExists = await ConnectionRequest.findOne({
@@ -43,7 +44,7 @@ connectionRequestRouter.post("/request/send/:status/:toUserId", userAuth, async 
         if (isRequestExists) {
             return res.status(400).json({
                 message: "Request already sent"
-            })
+            });
         }
 
         const newConnectionRequest = new ConnectionRequest({
@@ -58,10 +59,11 @@ connectionRequestRouter.post("/request/send/:status/:toUserId", userAuth, async 
         });
     }
     catch (error) {
-        res.status(400).send("ERROR : " + error.message);
+        return res.status(400).json({ message: `ERROR: ${error.message}` });
     }
 })
 
+// Review connection request
 connectionRequestRouter.post("/request/review/:status/:requestId", userAuth, async (req, res) => {
     try {
         const { status, requestId } = req.params;
@@ -82,20 +84,19 @@ connectionRequestRouter.post("/request/review/:status/:requestId", userAuth, asy
         if (!connectionRequest) {
             return res.status(404).json({
                 message: "Connection request not found"
-            })
+            });
         }
 
         connectionRequest.status = status;
         const data = await connectionRequest.save();
 
-        res.status(200).json({
+        return res.status(200).json({
             message: `Connection request ${status}`,
             data
         });
     }
     catch (error) {
-        console.log("ERROR : " + error.message);
-        res.status(400).send("ERR : " + error.message);
+        return res.status(400).json({ message: `ERROR: ${error.message}` });
     }
 })
 

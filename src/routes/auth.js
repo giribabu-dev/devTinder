@@ -1,11 +1,12 @@
-const express = require('express');
-const bcrypt = require('bcrypt');
+const express = require("express");
+const bcrypt = require("bcrypt");
 
-const { validateSignUpData, validateLoginData } = require('../utils/validation');
-const User = require('../models/user');
+const { validateSignUpData, validateLoginData } = require("../utils/validation");
+const User = require("../models/user");
 
 const authRouter = express.Router();
 
+// Sign-up or register
 authRouter.post("/signup", async (req, res) => {
     try {
         // Validate data
@@ -25,31 +26,36 @@ authRouter.post("/signup", async (req, res) => {
         });
         await newUser.save();
 
-        res.status(201).send("User added successfully!");
+        return res.status(201).json({
+            message: "User added successfully!"
+        });
     }
-    catch (err) {
-        res.status(400).send("ERROR : " + err.message);
+    catch (error) {
+        return res.status(400).json({
+            message: `ERROR: ${error.message}`
+        });
     }
-})
+});
 
+// Sign-in or login
 authRouter.post("/login", async (req, res) => {
-    const { emailId, password } = req.body;
-
     try {
+        const { emailId, password } = req.body;
+
         // Validate data
         validateLoginData(emailId);
 
         // Find user by email
         const user = await User.findOne({ emailId: emailId });
         if (!user) {
-            res.status(404).send("Invalid credentials");
+            return res.status(404).json({ message: "Invalid credentials" });
         }
 
         // Compare passwords
         // const isPasswordValid = await bcrypt.compare(password, user?.password);
         const isPasswordValid = await user.validatePassword(password);
         if (!isPasswordValid) {
-            res.status(400).send("Invalid credentials");
+            return res.status(400).json({ message: "Invalid credentials" });
         }
 
         // Create JWT Token
@@ -57,17 +63,19 @@ authRouter.post("/login", async (req, res) => {
 
         // Store token in cookies
         res.cookie("token", token, { httpOnly: true, expires: new Date(Date.now() + 7 * 3600000) });
-        res.status(200).send("Login successful!");
+        return res.status(200).json({ message: "Login successful!" });
     }
-    catch (err) {
-        res.status(400).send("ERROR : " + err.message);
+    catch (error) {
+        return res.status(400).json({
+            message: `ERROR: ${error.message}`
+        });
     }
-})
+});
 
+// Logout
 authRouter.post("/logout", (req, res) => {
     res.cookie("token", null, { expires: new Date(Date.now()) });
-
-    res.status(200).send("Logout successful");
-})
+    return res.status(200).json({ message: "Logout successful" });
+});
 
 module.exports = authRouter;
