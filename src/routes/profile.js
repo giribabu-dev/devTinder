@@ -1,41 +1,44 @@
-const express = require('express');
-const { userAuth } = require('../middlewares/auth');
-const { validateEditProfileData } = require('../utils/validation');
+const express = require("express");
+const { userAuth } = require("../middlewares/auth");
+const { validateEditProfileData } = require("../utils/validation");
 
 const profileRouter = express.Router();
 
+// View profile
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
     try {
         const user = req.user;
-
-        res.status(200).send(user);
+        return res.status(200).json({
+            message: "Fetched user profile",
+            user
+        });
     }
     catch (error) {
-        res.status(400).send("ERR : " + error.message)
+        return res.status(400).json({ message: `ERROR: ${error.message}` })
     }
 })
 
+// Update profile
 profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     try {
         const isEditAllowed = validateEditProfileData(req?.body);
         if (!isEditAllowed) {
             return res.status(400).json({
                 message: "Invalid edit request"
-            })
+            });
         }
 
         const userData = req.user;
         Object.keys(req?.body).forEach(field => userData[field] = req.body[field]);
         userData.save();
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "Profile updated successfully",
             data: userData
-        })
+        });
     }
     catch (error) {
-        console.error(error.message);
-        res.status(500).send("Internal server error: " + error.message);
+        return res.status(400).json({ message: `ERROR: ${error.message}` });
     }
 })
 

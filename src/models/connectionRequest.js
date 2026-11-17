@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+
 const { Schema, model } = mongoose;
 
 const connectionRequestSchema = new Schema({
